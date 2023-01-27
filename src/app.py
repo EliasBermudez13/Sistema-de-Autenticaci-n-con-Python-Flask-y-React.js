@@ -52,7 +52,7 @@ def get_info_user(user_id):
 @app.route('/people', methods=['GET'])
 def get_people():
     allPeople = Characters.query.all()
-    results = list(map(lambda item: item.serialize(),allPeople))
+    results = list(map(lambda item: item.minSerialize(),allPeople))
     return jsonify(results), 200
 
 @app.route('/people/<int:person_id>', methods=['GET'])
@@ -64,7 +64,7 @@ def get_info_person(person_id):
 @app.route('/planets', methods=['GET'])
 def get_planets():
     allPlanets= Planets.query.all()
-    results = list(map(lambda item: item.serialize(),allPlanets))
+    results = list(map(lambda item: item.minSerialize(),allPlanets))
     return jsonify(results), 200
 
 @app.route('/planets/<int:planet_id>', methods=['GET'])
@@ -77,7 +77,7 @@ def get_info_planet(planet_id):
 @app.route('/vehicles', methods=['GET'])
 def get_vehicles():
     allVehicles = Vehicles.query.all()
-    results = list(map(lambda item: item.serialize(),allVehicles))
+    results = list(map(lambda item: item.minSerialize(),allVehicles))
     return jsonify(results), 200
 
 @app.route('/vehicles/<int:vehicle_id>', methods=['GET'])
@@ -93,22 +93,79 @@ def get_user_favorites(user_id):
     results = list(map(lambda item: item.serialize(),favorites))
     return jsonify(results), 200
 
+#add a favorite planet
+@app.route('/user/<int:user_id>/favorites/planet/<int:planet_id>', methods=['POST'])
+def add_planet_favorite(user_id, planet_id):
+    #Add function from the docs
+    planeta = Planets.query.filter_by(id=planet_id).first().serialize()
+    planetName = planeta['name']
+    planet = Favorites(userID = user_id , planetsName = planetName)
+    print(planet)
+    db.session.add(planet)
+    db.session.commit()
 
+    #Get user favorites
+    favorites = Favorites.query.filter_by(userID=user_id).all()
+    results = list(map(lambda item: item.serialize(),favorites))
+    return jsonify(results), 201
+
+#add a favorite person
+@app.route('/user/<int:user_id>/favorites/people/<int:person_id>', methods=['POST'])
+def add_person_favorite(user_id, person_id):
+    #Add function from the docs
+    persona = Characters.query.filter_by(id=person_id).first().serialize()
+    personName = persona['name']
+    person = Favorites(userID = user_id , charactersName = personName)
+    db.session.add(person)
+    db.session.commit()
+
+    #Get user favorites
+    favorites = Favorites.query.filter_by(userID=user_id).all()
+    results = list(map(lambda item: item.serialize(),favorites))
+    return jsonify(results), 201
+
+#add a favorite vehicle
+@app.route('/user/<int:user_id>/favorites/vehicle/<int:vehicle_id>', methods=['POST'])
+def add_vehicle_favorite(user_id, vehicle_id):
+    #Add function from the docs
+    vehiculo = Vehicles.query.filter_by(id=vehicle_id).first().serialize()
+    vehicleName = vehiculo['name']
+    vehicle = Favorites(userID = user_id , vehiclesName = vehicleName)
+    db.session.add(vehicle)
+    db.session.commit()
+    #Get user favorites
+    favorites = Favorites.query.filter_by(userID=user_id).all()
+    results = list(map(lambda item: item.serialize(),favorites))
+    return jsonify(results), 201
 
 @app.route('/user', methods=['POST'])
 def add_new_user():
     allusers = User.query.all()
     results = list(map(lambda item: item.serialize(),allusers))
-    print(results)
     request_body = json.loads(request.data)
     results.append(request_body)
-    return jsonify(results), 200
+    return jsonify(results), 201
 
+#DELETE
+#Delete user
 @app.route('/user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     user = User.query.filter_by(id=user_id).first()
     db.session.delete(user)
-    return jsonify("User deleted"), 200
+    return jsonify("User deleted"), 201
+
+#Delete planet favorites from user
+@app.route('/user/<int:user_id>/favorites/planet/<int:planet_id>', methods=['DELETE'])
+def delete_favorite_planet(user_id, planet_id):
+    planeta = Planets.query.filter_by(id=planet_id).first().serialize()
+    planetName = planeta['name']
+    favorite_planet = Favorites.query.filter_by(userID=user_id, planetsName = planetName).first()
+    print(favorite_planet)
+    db.session.delete(favorite_planet)
+    db.session.commit()
+    favorites = Favorites.query.filter_by(userID=user_id).all()
+    results = list(map(lambda item: item.serialize(),favorites))
+    return jsonify(results), 200
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
