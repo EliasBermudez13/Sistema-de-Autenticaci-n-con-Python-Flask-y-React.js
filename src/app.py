@@ -200,6 +200,32 @@ def delete_favorite_planet(user_id, planet_id):
     results = list(map(lambda item: item.serialize(),favorites))
     return jsonify(results), 200
 
+#Delete person favorites from user
+@app.route('/user/<int:user_id>/favorites/people/<int:person_id>', methods=['DELETE'])
+def delete_favorite_person(user_id, person_id):
+    persona = Persons.query.filter_by(id=person_id).first().serialize()
+    personName = persona['name']
+    favorite_person = Favorites.query.filter_by(userID=user_id, personsName = personName).first()
+    print(favorite_person)
+    db.session.delete(favorite_person)
+    db.session.commit()
+    favorites = Favorites.query.filter_by(userID=user_id).all()
+    results = list(map(lambda item: item.serialize(),favorites))
+    return jsonify(results), 200
+
+#Delete vehicle favorites from user
+@app.route('/user/<int:user_id>/favorites/vehicle/<int:vehicle_id>', methods=['DELETE'])
+def delete_favorite_vehicle(user_id, vehicle_id):
+    vehicles= Vehicles.query.filter_by(id=vehicle_id).first().serialize()
+    vehicleName = vehicles['name']
+    favorite_vehicle = Favorites.query.filter_by(userID=user_id, vehiclesName = vehicleName).first()
+    print(favorite_vehicle)
+    db.session.delete(favorite_vehicle)
+    db.session.commit()
+    favorites = Favorites.query.filter_by(userID=user_id).all()
+    results = list(map(lambda item: item.serialize(),favorites))
+    return jsonify(results), 200
+    
 #SignUp route
 @app.route('/signup', methods=['POST'])
 def add_new_user():
