@@ -58,13 +58,20 @@ def login():
         return jsonify({"msg": "Wrong password"}), 404
 
     access_token = create_access_token(identity=email)
-    return jsonify(access_token=access_token)
+    return jsonify(access_token=access_token), 200
 
 # Protect a route with jwt_required, which will kick out requests
 # without a valid JWT present.
 @app.route("/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+@app.route("/home", methods=["GET"])
+@jwt_required()
+def get_home():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
@@ -185,7 +192,7 @@ def add_vehicle_favorite(user_id, vehicle_id):
 def delete_user(user_id):
     user = User.query.filter_by(id=user_id).first()
     db.session.delete(user)
-    return jsonify("User deleted"), 201
+    return jsonify("User deleted"), 204
 
 #Delete planet favorites from user
 @app.route('/user/<int:user_id>/favorites/planet/<int:planet_id>', methods=['DELETE'])
@@ -225,7 +232,7 @@ def delete_favorite_vehicle(user_id, vehicle_id):
     favorites = Favorites.query.filter_by(userID=user_id).all()
     results = list(map(lambda item: item.serialize(),favorites))
     return jsonify(results), 200
-    
+
 #SignUp route
 @app.route('/signup', methods=['POST'])
 def add_new_user():
